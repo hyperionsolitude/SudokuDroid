@@ -1,0 +1,20 @@
+# Gradle files
+.gradle/
+build/
+app/build/
+gradle-wrapper.log
+*.log
+
+# Local configuration
+local.properties
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Android specific
+captures/
+.cxx/
+*.apk
+*.hprof

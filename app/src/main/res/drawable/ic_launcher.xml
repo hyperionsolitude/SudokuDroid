@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="90"
+    android:viewportHeight="90">
+
+    <!-- Background Rounded Square -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M5,5h80v80h-80z" />
+
+    <!-- Grid Container -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="M10,10h70v70h-70z" />
+
+    <!-- Horizontal Thin Lines -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="1"
+        android:pathData="M10,20h70 M10,30h70 M10,40h70 M10,50h70 M10,60h70 M10,70h70 M10,80h70" />
+
+    <!-- Horizontal Thick Lines (3x3 blocks) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="3"
+        android:pathData="M10,40h70 M10,70h70" />
+
+    <!-- Vertical Thin Lines -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="1"
+        android:pathData="M20,10v70 M30,10v70 M40,10v70 M50,10v70 M60,10v70 M70,10v70 M80,10v70" />
+
+    <!-- Vertical Thick Lines (3x3 blocks) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="3"
+        android:pathData="M40,10v70 M70,10v70" />
+
+    <!-- Representative Numbers (Simplified) -->
+    <!-- Number 5 at (15, 15) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="M13,13h4v3h-3" />
+    <!-- Number 1 at (45, 45) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="M46,43v6" />
+    <!-- Number 9 at (75, 75) -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="2"
+        android:pathData="M73,77h4v-4h-4z M73,73h4v4" />
+</vector>
