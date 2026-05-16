@@ -231,7 +231,6 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 fontWeight = FontWeight.Bold,
                 color = colors.textPrimary
             )
-            Spacer(modifier = Modifier.size(48.dp))
         }
 
         Row(
@@ -250,12 +249,6 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(end = 8.dp)
             ) {
-                if (currentJoke != null) {
-                    AnimatedJokeText(
-                        text = currentJoke!!,
-                        color = colors.error
-                    )
-                }
                 IconButton(onClick = {
                     if (currentJoke != null) {
                         lastJokeResumeTime = System.currentTimeMillis()
@@ -342,7 +335,13 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                     modifier = Modifier
                         .fillMaxSize()
                         .background(colors.background)
-                        .clickable { /* Block all clicks */ },
+                        .clickable {
+                            if (currentJoke != null) {
+                                lastJokeResumeTime = System.currentTimeMillis()
+                                currentJoke = null
+                            }
+                            isPaused = !isPaused
+                        },
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
@@ -360,7 +359,13 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
             ) {
-                Button(onClick = { isPaused = !isPaused }, modifier = Modifier.width(120.dp)) {
+                Button(onClick = {
+                    if (currentJoke != null) {
+                        lastJokeResumeTime = System.currentTimeMillis()
+                        currentJoke = null
+                    }
+                    isPaused = !isPaused
+                }, modifier = Modifier.weight(1f)) {
                     Text(if (isPaused) strings.resume else strings.pause)
                 }
                 Spacer(modifier = Modifier.width(16.dp))
@@ -378,7 +383,7 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                         currentJoke = null
                         lastJokeResumeTime = 0L
                     },
-                    modifier = Modifier.width(120.dp)
+                    modifier = Modifier.weight(1f)
                 ) {
                     Text(strings.newGame)
                 }
@@ -505,6 +510,34 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                         Text(strings.winButton)
                     }
                 }
+            }
+        }
+    }
+
+    if (currentJoke != null) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(colors.background.copy(alpha = 0.7f))
+                .clickable {
+                    if (currentJoke != null) {
+                        lastJokeResumeTime = System.currentTimeMillis()
+                        currentJoke = null
+                    }
+                    isPaused = !isPaused
+                },
+            contentAlignment = Alignment.Center
+        ) {
+            Box(
+                modifier = Modifier
+                    .background(colors.background, RoundedCornerShape(16.dp))
+                    .border(2.dp, colors.error, RoundedCornerShape(16.dp))
+                    .padding(32.dp)
+            ) {
+                AnimatedJokeText(
+                    text = currentJoke!!,
+                    color = colors.error
+                )
             }
         }
     }
