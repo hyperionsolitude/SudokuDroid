@@ -17,7 +17,16 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.animation.core.*
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.geometry.Size
+import java.util.Random
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -51,7 +60,7 @@ val TR_Strings = GameStrings(
     resume = "Devam Et",
     newGame = "Yeni Oyun",
     winTitle = "Tebrikler!",
-    winMessage = { time -> "Bulmacayı $time sürede çözdünüz! Anneniz sizinle gurur duyacak!" },
+    winMessage = { time -> "Bulmacayı $time sürede çözdünüz! Harika bir iş çıkardınız!" },
     winButton = "Harika!"
 )
 
@@ -65,7 +74,7 @@ val EN_Strings = GameStrings(
     resume = "Resume",
     newGame = "New Game",
     winTitle = "Congratulations!",
-    winMessage = { time -> "You solved the puzzle in $time! Your mom will be proud!" },
+    winMessage = { time -> "You solved the puzzle in $time! Great job!" },
     winButton = "Awesome!"
 )
 
@@ -83,7 +92,7 @@ data class SudokuThemeColors(
 
 val DarkThemeColors = SudokuThemeColors(
     background = Color.Black,
-    gridLine = Color(0xFF424242),
+    gridLine = Color.White,
     highlight = Color(0xFF333333),
     selected = Color(0xFF4D4D4D),
     fixed = Color.White,
@@ -94,7 +103,7 @@ val DarkThemeColors = SudokuThemeColors(
 
 val LightThemeColors = SudokuThemeColors(
     background = Color(0xFFF5F5F5),
-    gridLine = Color(0xFFBDBDBD),
+    gridLine = Color.Black,
     highlight = Color(0xFFE0E0E0),
     selected = Color(0xFFB3E5FC),
     fixed = Color(0xFF212121),
@@ -169,7 +178,12 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
             }
             if (!won) break
         }
-        showWinDialog = won
+        if (won) {
+            showWinDialog = true
+            isPaused = true
+        } else {
+            showWinDialog = won
+        }
     }
 
     Column(
@@ -240,8 +254,33 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
             modifier = Modifier
                 .fillMaxWidth()
                 .aspectRatio(1f)
-                .border(2.dp, colors.textPrimary, RoundedCornerShape(4.dp))
                 .background(colors.background)
+                .border(3.dp, colors.textPrimary, RoundedCornerShape(4.dp))
+                .drawWithContent {
+                    drawContent()
+                    val w = size.width
+                    val h = size.height
+
+                    for (i in 1..8) {
+                        val thickness = if (i % 3 == 0) 4.dp.toPx() else 2.dp.toPx()
+
+                        // Vertical lines
+                        drawLine(
+                            color = colors.gridLine,
+                            start = Offset((i * w / 9f) - thickness / 2, 0f),
+                            end = Offset((i * w / 9f) - thickness / 2, h),
+                            strokeWidth = thickness
+                        )
+
+                        // Horizontal lines
+                        drawLine(
+                            color = colors.gridLine,
+                            start = Offset(0f, (i * h / 9f) - thickness / 2),
+                            end = Offset(w, (i * h / 9f) - thickness / 2),
+                            strokeWidth = thickness
+                        )
+                    }
+                }
         ) {
             Column {
                 for (row in 0 until 9) {
@@ -263,7 +302,6 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                                 modifier = Modifier
                                     .weight(1f)
                                     .aspectRatio(1f)
-                                    .border(0.5.dp, colors.gridLine)
                             )
                         }
                     }
@@ -389,6 +427,7 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
     }
 
     if (showWinDialog) {
+        VictoryEffect()
         AlertDialog(
             onDismissRequest = { showWinDialog = false },
             title = { Text(strings.winTitle) },
@@ -458,5 +497,48 @@ fun DifficultyButton(label: String, onClick: () -> Unit) {
         contentPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
     ) {
         Text(text = label, fontSize = 14.sp)
+    }
+}
+
+data class Particle(val x: Float, val y: Float, val color: Color, val size: Float, val speed: Float, val vx: Float)
+
+@Composable
+fun VictoryEffect() {
+    val random = remember { Random() }
+    val particles = remember {
+        List(60) {
+            Particle(
+                x = random.nextFloat(),
+                y = random.nextFloat(),
+                color = Color(random.nextInt()),
+                size = random.nextFloat() * 10f + 5f,
+                speed = random.nextFloat() * 0.005f + 0.002f,
+                vx = random.nextFloat() * 0.001f - 0.0005f
+            )
+        }
+    }
+    var time by remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(Unit) {
+        while(true) {
+            time += 0.01f
+            delay(16)
+        }
+    }
+
+    Canvas(modifier = Modifier.fillMaxSize().alpha(0.8f)) {
+        particles.forEach { p ->
+            var curY = (p.y - time * p.speed)
+            while (curY < 0) curY += 1f
+
+            var curX = (p.x + time * p.vx)
+            while (curX < 0) curX += 1f
+            while (curX > 1) curX -= 1f
+
+            drawCircle(
+                color = p.color,
+                radius = p.size,
+                center = Offset(curX * size.width, curY * size.height)
+            )
+        }
     }
 }
