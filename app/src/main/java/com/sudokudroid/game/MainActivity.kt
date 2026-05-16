@@ -464,17 +464,49 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
     }
 
     if (showWinDialog) {
-        VictoryEffect()
-        AlertDialog(
-            onDismissRequest = { showWinDialog = false },
-            title = { Text(strings.winTitle) },
-            text = { Text(strings.winMessage(formatTime(secondsElapsed))) },
-            confirmButton = {
-                TextButton(onClick = { showWinDialog = false }) {
-                    Text(strings.winButton)
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            VictoryEffect()
+
+            Card(
+                modifier = Modifier
+                    .padding(24.dp)
+                    .wrapContentSize(),
+                colors = CardDefaults.cardColors(
+                    containerColor = if (isDarkTheme) Color(0xFF333333) else Color.White
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = strings.winTitle,
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = strings.winMessage(formatTime(secondsElapsed)),
+                        fontSize = 18.sp,
+                        color = colors.textPrimary,
+                        textAlign = TextAlign.Center
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Button(
+                        onClick = { showWinDialog = false },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(strings.winButton)
+                    }
                 }
             }
-        )
+        }
     }
 }
 
@@ -575,20 +607,31 @@ fun AnimatedJokeText(text: String, color: Color) {
     )
 }
 
-data class Particle(val x: Float, val y: Float, val color: Color, val size: Float, val speed: Float, val vx: Float)
+enum class ParticleType { CONFETTI, BALLOON }
+data class Particle(
+    val x: Float,
+    val y: Float,
+    val color: Color,
+    val size: Float,
+    val speed: Float,
+    val vx: Float,
+    val type: ParticleType
+)
 
 @Composable
 fun VictoryEffect() {
     val random = remember { Random() }
     val particles = remember {
-        List(60) {
+        List(100) {
+            val type = if (random.nextBoolean()) ParticleType.CONFETTI else ParticleType.BALLOON
             Particle(
                 x = random.nextFloat(),
-                y = random.nextFloat(),
+                y = if (type == ParticleType.CONFETTI) -0.1f else 1.1f,
                 color = Color(random.nextInt()),
-                size = random.nextFloat() * 10f + 5f,
-                speed = random.nextFloat() * 0.005f + 0.002f,
-                vx = random.nextFloat() * 0.001f - 0.0005f
+                size = if (type == ParticleType.CONFETTI) random.nextFloat() * 8f + 4f else random.nextFloat() * 20f + 15f,
+                speed = if (type == ParticleType.CONFETTI) random.nextFloat() * 0.5f + 0.2f else -(random.nextFloat() * 0.3f + 0.1f),
+                vx = random.nextFloat() * 0.01f - 0.005f,
+                type = type
             )
         }
     }
@@ -600,10 +643,16 @@ fun VictoryEffect() {
         }
     }
 
-    Canvas(modifier = Modifier.fillMaxSize().alpha(0.8f)) {
+    Canvas(modifier = Modifier.fillMaxSize().alpha(0.9f)) {
         particles.forEach { p ->
-            var curY = (p.y - time * p.speed)
-            while (curY < 0) curY += 1f
+            var curY = (p.y + time * p.speed)
+            if (p.type == ParticleType.CONFETTI) {
+                while (curY > 1.1f) curY -= 1.2f
+                if (curY < -0.1f) curY = -0.1f
+            } else {
+                while (curY < -0.2f) curY += 1.2f
+                if (curY > 1.2f) curY = 1.2f
+            }
 
             var curX = (p.x + time * p.vx)
             while (curX < 0) curX += 1f
