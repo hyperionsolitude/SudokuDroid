@@ -27,6 +27,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.geometry.Size
 import java.util.Random
+
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -96,7 +97,7 @@ val DarkThemeColors = SudokuThemeColors(
     highlight = Color(0xFF333333),
     selected = Color(0xFF4D4D4D),
     fixed = Color.White,
-    user = Color(0xFFBDBDBD),
+    user = Color.White,
     error = Color(0xFFEF5350),
     textPrimary = Color.White
 )
@@ -107,7 +108,7 @@ val LightThemeColors = SudokuThemeColors(
     highlight = Color(0xFFE0E0E0),
     selected = Color(0xFFB3E5FC),
     fixed = Color(0xFF212121),
-    user = Color(0xFF757575),
+    user = Color.Black,
     error = Color(0xFFD32F2F),
     textPrimary = Color(0xFF212121)
 )
@@ -153,11 +154,22 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
 
     var secondsElapsed by remember { mutableIntStateOf(0) }
     var isPaused by remember { mutableStateOf(true) } // Starts paused
+    var currentJoke by remember { mutableStateOf<String?>(null) }
+    var lastJokeResumeTime by remember { mutableLongStateOf(0L) }
+    val jokeMessages = remember { listOf("YETER ARTIK", "OGLUNLA ILGILEN", "BIR ORDAYIM BIR BURDAYIM", "KAYBOL") }
 
     LaunchedEffect(isPaused) {
         while (!isPaused) {
             delay(1000)
             secondsElapsed++
+
+            val currentTime = System.currentTimeMillis()
+            if (currentTime - lastJokeResumeTime > 3 * 60 * 1000L) {
+                if (java.util.Random().nextInt(100) < 3) { // 3% chance every second
+                    currentJoke = jokeMessages.random()
+                    isPaused = true
+                }
+            }
         }
     }
 
@@ -233,8 +245,24 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Medium
             )
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { isPaused = !isPaused }) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(end = 8.dp)
+            ) {
+                if (currentJoke != null) {
+                    AnimatedJokeText(
+                        text = currentJoke!!,
+                        color = colors.error
+                    )
+                }
+                IconButton(onClick = {
+                    if (currentJoke != null) {
+                        lastJokeResumeTime = System.currentTimeMillis()
+                        currentJoke = null
+                    }
+                    isPaused = !isPaused
+                }) {
                     Icon(
                         imageVector = if (isPaused) Icons.Default.PlayArrow else Icons.Default.Pause,
                         contentDescription = "Pause/Resume",
@@ -248,6 +276,7 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                     fontWeight = FontWeight.Bold
                 )
             }
+
         }
 
         Box(
@@ -346,6 +375,8 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                         showWinDialog = false
                         secondsElapsed = 0
                         isPaused = true
+                        currentJoke = null
+                        lastJokeResumeTime = 0L
                     },
                     modifier = Modifier.width(120.dp)
                 ) {
@@ -400,6 +431,8 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 showWinDialog = false
                 secondsElapsed = 0
                 isPaused = true
+                currentJoke = null
+                lastJokeResumeTime = 0L
             }
             DifficultyButton(strings.medium) {
                 currentDifficulty = Difficulty.MEDIUM
@@ -411,6 +444,8 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 showWinDialog = false
                 secondsElapsed = 0
                 isPaused = true
+                currentJoke = null
+                lastJokeResumeTime = 0L
             }
             DifficultyButton(strings.hard) {
                 currentDifficulty = Difficulty.HARD
@@ -422,6 +457,8 @@ fun SudokuScreen(isDarkTheme: Boolean, language: AppLanguage, onThemeToggle: () 
                 showWinDialog = false
                 secondsElapsed = 0
                 isPaused = true
+                currentJoke = null
+                lastJokeResumeTime = 0L
             }
         }
     }
@@ -498,6 +535,44 @@ fun DifficultyButton(label: String, onClick: () -> Unit) {
     ) {
         Text(text = label, fontSize = 14.sp)
     }
+}
+
+@Composable
+fun AnimatedJokeText(text: String, color: Color) {
+    val randomEffect = remember { (0..2).random() }
+    val infiniteTransition = rememberInfiniteTransition(label = "joke")
+
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(500),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "alpha"
+    )
+
+    val offset by infiniteTransition.animateFloat(
+        initialValue = -2f,
+        targetValue = 2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(100),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "offset"
+    )
+
+    Text(
+        text = text,
+        color = color,
+        fontSize = 16.sp,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier
+            .graphicsLayer {
+                if (randomEffect == 1) translationX = offset
+            }
+            .alpha(if (randomEffect == 0) alpha else 1f)
+    )
 }
 
 data class Particle(val x: Float, val y: Float, val color: Color, val size: Float, val speed: Float, val vx: Float)
